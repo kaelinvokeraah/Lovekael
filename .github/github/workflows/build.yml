@@ -1,0 +1,38 @@
+name: Build Kael APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip build-essential git unzip openjdk-17-jdk
+          pip install -r requirements.txt buildozer cython kivy
+
+      - name: Prepare .env file from GitHub Secret
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
+
+      - name: Build APK
+        run: |
+          buildozer init
+          buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: Kael-APK
+          path: bin/*.apk
